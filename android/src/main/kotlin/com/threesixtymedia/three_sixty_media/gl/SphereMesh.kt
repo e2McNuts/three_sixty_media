@@ -8,12 +8,12 @@ import java.nio.ShortBuffer
 import kotlin.math.*
 
 /**
- * Erstellt eine Kugelgeometrie mit UV-Koordinaten für equirectangular Mapping.
- * Die Normals zeigen nach innen, damit die Kamera "in der Kugel" sitzt.
+ * Creates a sphere geometry with UV coordinates for equirectangular mapping.
+ * Normals point inward so the camera sits inside the sphere.
  */
 class SphereMesh(
-    stacks: Int = 48, // horizontale Unterteilungen
-    slices: Int = 96, // vertikale Unterteilungen
+    stacks: Int = 48, // horizontal subdivisions
+    slices: Int = 96, // vertical subdivisions
     radius: Float = 1.0f
 ) {
     private val vertexCount: Int
@@ -34,17 +34,17 @@ class SphereMesh(
                 val u = j.toFloat() / slices
                 val theta = 2.0 * Math.PI * u
 
-                // Position
+                // position
                 val x = (sin(phi) * cos(theta) * radius).toFloat()
                 val y = (cos(phi) * radius).toFloat()
                 val z = (sin(phi) * sin(theta) * radius).toFloat()
 
-                // Normals nach innen zeigen → Vorzeichen umdrehen
+                // Flip sign so normals point inward
                 vertices.add(-x)
                 vertices.add(-y)
                 vertices.add(-z)
 
-                texCoords.add(u.toFloat())      // [0..1]
+                texCoords.add(u)      // [0..1]
                 texCoords.add((1.0 - v).toFloat()) // [0..1]
             }
         }

@@ -13,6 +13,11 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.platform.PlatformView
 
+/**
+ * PlatformView that hosts a GLSurfaceView to render 360° content.
+ *
+ * Coordinates between Flutter (via MethodChannel) and the native Renderer360.
+ */
 class ThreeSixtyMediaView(
     context: Context,
     messenger: BinaryMessenger,
@@ -31,7 +36,7 @@ class ThreeSixtyMediaView(
         glView.setRenderer(renderer)
         glView.renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
 
-        // Touchsteuerung initialisieren:
+        // Initialize the touch controller:
         touchController = TouchController(
             context,
             onRotationChanged = { yaw, pitch ->
@@ -47,11 +52,17 @@ class ThreeSixtyMediaView(
         )
 
         renderer.onFovChanged = { fov ->
-        // 🧵 Sicherstellen, dass wir im Main/UI-Thread bleiben
+        // Ensure this runs on the main/UI thread
         mainHandler.post {
             channel.invokeMethod("onFovChanged", mapOf("fov" to fov))
         }
     }
+
+        renderer.onError = { message: String ->
+            mainHandler.post {
+                channel.invokeMethod("onError", mapOf("message" to message))
+            }
+        }
 
         glView.setOnTouchListener { _, event ->
             touchController.onTouchEvent(event)
@@ -84,6 +95,7 @@ class ThreeSixtyMediaView(
                 val min = call.argument<Double>("min") ?: 30.0
                 val max = call.argument<Double>("max") ?: 100.0
                 glView.queueEvent { renderer.setFovLimits(min, max) }
+                mainHandler.post { touchController.updateFovLimits(min, max) }
                 result.success(null)
             }
             "resetView" -> {

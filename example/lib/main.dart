@@ -4,7 +4,7 @@ import 'package:three_sixty_media/three_sixty_media.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final bytes = await rootBundle.load('assets/pano.png');
+  final bytes = await rootBundle.load('assets/test.jpg');
   runApp(DemoApp(imageBytes: bytes.buffer.asUint8List()));
 }
 

@@ -6,12 +6,13 @@ import 'package:flutter/services.dart';
 MethodChannel _channelForView(int viewId) =>
     MethodChannel('com.threesixtymedia/core/$viewId');
 
-/// Steuert eine native ThreeSixtyMedia-Instanz.
-/// Version 0.1.0: Nur Android, nur Bilder.
+/// Controls a native ThreeSixtyMedia instance.
+///
+/// This controller communicates with the Android renderer via a MethodChannel.
+/// Yaw and pitch are specified in radians; FOV is specified in degrees.
 class ThreeSixtyController {
   /// Private interne Factory – kann nur innerhalb dieser Datei aufgerufen werden.
-  ThreeSixtyController._(this._viewId)
-      : _channel = _channelForView(_viewId) {
+  ThreeSixtyController._(this._viewId) : _channel = _channelForView(_viewId) {
     // 🆕 Event-Handler für Rückmeldungen vom nativen Code (z. B. FOV-Änderung)
     _channel.setMethodCallHandler(_handleNativeCalls);
   }
@@ -23,34 +24,42 @@ class ThreeSixtyController {
   // 🆕 Callback für FOV-Änderungen (z. B. bei Pinch)
   void Function(double fov)? _onFovChanged;
 
+  void Function(String message)? _onError;
+
   /// Öffentliche Factory, um den Controller an eine View zu binden.
   /// Beispiel: `ThreeSixtyController.attachToView(viewId)`
   static ThreeSixtyController attachToView(int viewId) {
     return ThreeSixtyController._(viewId);
   }
 
+
+
   // --------------------------------------------------------------------------
   // 🧩 Öffentliche API-Methoden
   // --------------------------------------------------------------------------
 
-  /// Setzt Blickrichtung (Radiant). Pitch wird intern geclamped.
+  /// Sets the camera orientation.
+  ///
+  /// [yaw] and [pitch] must be in radians. The pitch will be clamped to ±π/2.
   Future<void> setYawPitch(double yaw, double pitch) async {
     await _channel.invokeMethod('setYawPitch', {'yaw': yaw, 'pitch': pitch});
   }
 
-  /// Setzt Field-of-View (Grad).
+  /// Sets the field of view (in degrees).
+  ///
+  /// The value will be clamped to the current min and max FOV.
   Future<void> setFov(double fov) async {
     await _channel.invokeMethod('setFov', {'fov': fov});
   }
 
-  /// Legt minimale und maximale FOV-Werte fest.
+  /// Defines the minimum and maximum field of view in degrees.
   ///
-  /// Damit kann man den Zoom-Bereich einschränken oder erweitern (z. B. Fisheye).
+  /// Use this to limit or enlarge the zoom range (e.g. to allow fisheye views).
   Future<void> setFovLimits({required double min, required double max}) async {
     await _channel.invokeMethod('setFovLimits', {'min': min, 'max': max});
   }
 
-  /// Setzt die Ansicht auf die Standardwerte zurück.
+  /// Resets yaw, pitch and FOV to their default values.
   Future<void> resetView() async {
     await _channel.invokeMethod('resetView');
   }
@@ -78,9 +87,13 @@ class ThreeSixtyController {
   // 🧭 Event Listener
   // --------------------------------------------------------------------------
 
-  /// Wird aufgerufen, wenn sich der Zoom (FOV) ändert (z. B. durch Pinch oder Reset).
+  /// Registers a callback that is invoked whenever the FOV changes.
   set onFovChanged(void Function(double fov)? callback) {
     _onFovChanged = callback;
+  }
+
+  set onError(void Function(String message)? callback) {
+    _onError = callback;
   }
 
   // --------------------------------------------------------------------------
@@ -95,6 +108,14 @@ class ThreeSixtyController {
         if (args != null && args.containsKey('fov')) {
           final fov = (args['fov'] as num).toDouble();
           _onFovChanged?.call(fov);
+        }
+        break;
+
+      case 'onError':
+        final args = call.arguments as Map?;
+        if (args != null && args.containsKey('message')) {
+          final msg = args['message'] as String;
+          _onError?.call(msg);
         }
         break;
 

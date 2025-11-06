@@ -3,8 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'controller.dart';
 
-/// Flutter-Widget, das den nativen Android-GL-View einbettet.
-/// Web/iOS werden in späteren Versionen ergänzt.
+/// Flutter widget that embeds the native Android OpenGL view.
+/// Web and iOS implementations will be added in future versions.
 class ThreeSixtyView extends StatefulWidget {
   const ThreeSixtyView({
     super.key,
@@ -56,11 +56,9 @@ class _ThreeSixtyViewState extends State<ThreeSixtyView> {
   }
 
   void _onPlatformViewCreated(int id) {
-    // Public factory statt privatem Konstruktor:
+    // Public factory instead of private constructor:
     _controller = widget.controller ?? ThreeSixtyController.attachToView(id);
-
-    // Hinweis: Warnung "field not used" ist kein Fehler, wir behalten die Referenz
-    // um später Methoden aufzurufen oder onDispose sauber freizugeben.
+    
     widget.onReady?.call();
   }
 }

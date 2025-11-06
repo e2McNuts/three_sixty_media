@@ -6,7 +6,7 @@ import io.flutter.plugin.platform.PlatformView
 import io.flutter.plugin.platform.PlatformViewFactory
 import io.flutter.plugin.common.StandardMessageCodec
 
-/** Erzeugt pro Flutter-Instanz eine native View. */
+/** Creates a native view for each Flutter instance. */
 class ThreeSixtyMediaFactory(
   private val messenger: BinaryMessenger,
   private val appContext: Context

@@ -13,12 +13,12 @@ import javax.microedition.khronos.opengles.GL10
 import kotlin.math.*
 
 /**
- * Renderer360 – OpenGL-Renderer für equirectangular 360°-Bilder.
+ * Renderer360 – OpenGL renderer for equirectangular 360° images.
  *
- * Unterstützt:
- *  • Yaw / Pitch / FOV (Kamerasteuerung)
- *  • Textur-Laden aus Pfad oder Bytes
- *  • SphereMesh-Rendering (innenliegend)
+ * Supports:
+ *  • yaw / pitch / FOV camera control
+ *  • loading textures from a file path or bytes
+ *  • rendering an inward-facing sphere mesh
  */
 class Renderer360(private val context: Context) : GLSurfaceView.Renderer {
 
@@ -31,29 +31,33 @@ class Renderer360(private val context: Context) : GLSurfaceView.Renderer {
 
     var onFovChanged: ((Double) -> Unit)? = null
 
+    var onError: ((String) -> Unit)? = null
 
-    // OpenGL-Objekte
+
+    // OpenGL-objects
     private var program = 0
     private var textureId = 0
     private lateinit var sphere: SphereMesh
 
-    // Matrizen
+    // Matrices
     private val projection = FloatArray(16)
     private val view = FloatArray(16)
     private val mvp = FloatArray(16)
 
-    // Shader-Handles
+    // Shader handles
     private var uMVP = 0
     private var uTexture = 0
     private var aPos = 0
     private var aTex = 0
 
-    // Breite/Höhe für Aspect Ratio
+    // Surface width/height for aspect ratio
     private var surfaceWidth = 1
     private var surfaceHeight = 1
 
-    // Bildpfad (nur zur Info)
+    // Image path (for reference)
     private var imagePath: String? = null
+
+
 
     // ---------------------------------------------------------------------
     //  OpenGL-Lifecycle
@@ -118,9 +122,9 @@ class Renderer360(private val context: Context) : GLSurfaceView.Renderer {
         val eyeY = 0f
         val eyeZ = 0f
 
-        val dirX = (cos(pitchRad) * sin(yawRad)).toFloat()
-        val dirY = sin(pitchRad).toFloat()
-        val dirZ = (cos(pitchRad) * cos(yawRad)).toFloat()
+        val dirX = (cos(pitchRad) * sin(yawRad))
+        val dirY = sin(pitchRad)
+        val dirZ = (cos(pitchRad) * cos(yawRad))
 
         val centerX = eyeX + dirX
         val centerY = eyeY + dirY
@@ -137,24 +141,31 @@ class Renderer360(private val context: Context) : GLSurfaceView.Renderer {
         sphere.draw(aPos, aTex)
     }
 
+
+
     // ---------------------------------------------------------------------
-    //  Texturen
+    //  Textures
     // ---------------------------------------------------------------------
 
-    /** Lädt eine Bilddatei (lokal oder Asset). */
+    /** Loads an image file (local or asset). */
     fun loadImage(path: String) {
         imagePath = path
         val bitmap = loadBitmap(path)
         if (bitmap == null) {
             Log.e("Renderer360", "Failed to load bitmap from $path")
+            onError?.invoke("Failed to load image: $path")
             return
         }
         uploadTexture(bitmap)
     }
 
-    /** Lädt ein Bild direkt aus Byte-Daten (vom Flutter-Layer). */
+    /** Loads an image directly from byte data (from the Flutter layer). */
     fun loadImageBytes(data: ByteArray) {
-        val bitmap = BitmapFactory.decodeByteArray(data, 0, data.size) ?: return
+        val bitmap = BitmapFactory.decodeByteArray(data, 0, data.size)
+        if (bitmap == null) {
+            onError?.invoke("Failed to decode image bytes")
+            return
+        }
         uploadTexture(bitmap)
     }
 
@@ -173,7 +184,7 @@ class Renderer360(private val context: Context) : GLSurfaceView.Renderer {
         bitmap.recycle()
     }
 
-    /** Liest eine Bitmap aus Asset oder Dateipfad. */
+    /** Reads a bitmap from an asset or file path. */
     private fun loadBitmap(path: String): Bitmap? {
         return try {
             val stream: InputStream? = when {
@@ -188,13 +199,11 @@ class Renderer360(private val context: Context) : GLSurfaceView.Renderer {
         }
     }
 
-    // ---------------------------------------------------------------------
-    //  Kamera-Steuerung
-    // ---------------------------------------------------------------------
 
-    fun getYaw() = yaw
-    fun getPitch() = pitch
-    fun getFov() = fov
+
+    // ---------------------------------------------------------------------
+    //  Camera control
+    // ---------------------------------------------------------------------
 
     fun setYawPitchRadians(yawRad: Double, pitchRad: Double) {
         yaw = yawRad
@@ -202,30 +211,34 @@ class Renderer360(private val context: Context) : GLSurfaceView.Renderer {
     }
 
     fun setFovDegrees(value: Double) {
-    fov = value.coerceIn(minFov, maxFov)
-    updateProjection()
-    onFovChanged?.invoke(fov)
+        fov = value.coerceIn(minFov, maxFov)
+        updateProjection()
+        onFovChanged?.invoke(fov)
     }
 
+    /** Sets the minimum and maximum FOV in degrees. */
     fun setFovLimits(min: Double, max: Double) {
-    minFov = min
-    maxFov = max
-    fov = fov.coerceIn(minFov, maxFov)
-    updateProjection()
-    onFovChanged?.invoke(fov)
+        minFov = min
+        maxFov = max
+        fov = fov.coerceIn(minFov, maxFov)
+        updateProjection()
+        onFovChanged?.invoke(fov)
     }
 
+    /** Resets yaw, pitch and FOV to their default values. */
     fun resetView() {
-    yaw = 0.0
-    pitch = 0.0
-    fov = ((minFov + maxFov) / 2.0)
-    updateProjection()
+        yaw = 0.0
+        pitch = 0.0
+        fov = ((minFov + maxFov) / 2.0)
+        updateProjection()
     }
 
     private fun updateProjection() {
         val aspect = surfaceWidth.toFloat() / surfaceHeight.toFloat()
         Matrix.perspectiveM(projection, 0, fov.toFloat(), aspect, 0.1f, 100f)
     }
+
+
 
     // ---------------------------------------------------------------------
     //  Cleanup
