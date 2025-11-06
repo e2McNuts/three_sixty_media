@@ -51,6 +51,10 @@ class ThreeSixtyMediaView(
             }
         )
 
+        glView.post {
+            touchController.updateViewSize(glView.width, glView.height)
+        }
+
         renderer.onFovChanged = { fov ->
         // Ensure this runs on the main/UI thread
         mainHandler.post {

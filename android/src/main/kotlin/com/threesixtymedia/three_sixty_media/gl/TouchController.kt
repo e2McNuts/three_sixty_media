@@ -24,6 +24,15 @@ class TouchController(
     private var minFov = 30.0
     private var maxFov = 100.0
 
+    private var viewWidth = 1
+    private var viewHeight = 1
+
+    /** Set the current view dimensions. Called from ThreeSixtyMediaView. */
+    fun updateViewSize(width: Int, height: Int) {
+        viewWidth = if (width > 0) width else 1
+        viewHeight = if (height > 0) height else 1
+    }
+
     /** Update FOV limits. Called when Flutter invokes setFovLimits(). */
     fun updateFovLimits(min: Double, max: Double) {
         minFov = min
@@ -38,10 +47,20 @@ class TouchController(
             distanceX: Float,
             distanceY: Float
         ): Boolean {
-            // Adjust sensitivity
-            yaw += distanceX * 0.005
-            pitch += distanceY * 0.005
-            pitch = min(max(pitch, -Math.PI / 2.0), Math.PI / 2.0)
+            // Vertikales FOV (in Radiant) aus dem aktuellen FOV-Wert berechnen
+            val vFovRad = Math.toRadians(fov)
+            // Seitenverhältnis ermitteln
+            val aspect = viewWidth.toDouble() / viewHeight.toDouble()
+            // Horizontales FOV (in Radiant) anhand des Aspekts berechnen
+            val hFovRad = 2.0 * Math.atan(Math.tan(vFovRad / 2.0) * aspect)
+
+            // Pixel-Delta in Winkel-Delta umrechnen; negative Vorzeichen für „Canvas zieht mit“
+            val yawDelta = (distanceX / viewWidth) * hFovRad
+            val pitchDelta = (distanceY / viewHeight) * vFovRad
+
+            yaw -= yawDelta
+            pitch -= pitchDelta
+            pitch = pitch.coerceIn(-Math.PI / 2.0, Math.PI / 2.0)
             onRotationChanged(yaw, pitch)
             return true
         }
