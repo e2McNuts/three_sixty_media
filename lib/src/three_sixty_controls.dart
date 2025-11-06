@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:three_sixty_media/three_sixty_media.dart';
 
-// TODO: Fix controls overlay for FOV Change.
 // Reset Button is working fine.
 
 /// Overlay-UI für den 360°-Viewer.
