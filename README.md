@@ -106,4 +106,11 @@ The roadmap in `ROADMAP.md` outlines the planned evolution of this plugin. Key m
 - **v0.9.0 – Stabilisation & cross‑platform**: gyroscope support across platforms, CI/CD, performance profiling and accessibility. 
 - **v1.0.0 – MVP release**: cross‑platform 360° image & video player with unified API, customizable UI, marker timeline, gyroscope support and example app. 
 
-Check `[ROADMAP.md](ROADMAP.md)` for the full breakdown of tasks and progress.
+Check [ROADMAP.md](ROADMAP.md) for the full breakdown of tasks and progress.
+
+## Contributing
+Contributions are welcome! The project is in its early stages – feedback, issue reports and pull requests (especially for platform ports or improved documentation) are highly appreciated. Please open an issue to discuss larger changes before submitting a PR.
+
+## License
+This project is licensed under the **Three Sixty Media License (Non‑Commercial)**.
+Commercial use requires prior written permission from Magnus Ormos.
