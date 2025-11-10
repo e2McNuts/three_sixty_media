@@ -92,4 +92,18 @@ class _My360ViewerState extends State<My360Viewer> {
   }
 }
 ```
+The example above mirrors the demo in `example/lib/main.dart`.
+Use `source: 'memory'` when loading images via `loadImageBytes()`; otherwise set `source` to an asset or file path and omit the controller’s load call.
 
+## Development Roadmap
+The roadmap in `ROADMAP.md` outlines the planned evolution of this plugin. Key milestones include:
+- **v0.2.0 – Android video engine**: add 360° video playback using ExoPlayer, with play/pause/seek controls and event streams. 
+- **v0.3.0 – Unified controller & video UI**: build a `ThreeSixtyMediaPlayer` widget with play bar, seek bar, fullscreen toggle and a unified controller for images and videos. 
+- **v0.4.0 / v0.5.0 – Web support**: implement 360° images and videos in the browser via Three.js and HTML5 video. 
+- **v0.6.0 – Marker system & timeline**: allow time‑based and spatial markers with callbacks and integration into the seek bar. 
+- **v0.7.0 – Quality & playback options**: quality selection, playback speed, looping, buffering indicators and subtitle support. 
+- **v0.8.0 – iOS support**: native renderer using Metal/SceneKit and optional ARKit integration. 
+- **v0.9.0 – Stabilisation & cross‑platform**: gyroscope support across platforms, CI/CD, performance profiling and accessibility. 
+- **v1.0.0 – MVP release**: cross‑platform 360° image & video player with unified API, customizable UI, marker timeline, gyroscope support and example app. 
+
+Check `[ROADMAP.md](ROADMAP.md)` for the full breakdown of tasks and progress.
