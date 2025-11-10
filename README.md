@@ -10,17 +10,12 @@ The Android implementation uses a native `GLSurfaceView` and OpenGL ES to render
 The Flutter side exposes a `ThreeSixtyView` widget and a `ThreeSixtyController` for interacting with the native renderer. A small overlay widget (`ThreeSixtyControls`) provides zoom in/out buttons, a reset button and displays the current FOV.
 
 ## Platform support
-Platform	Status	Planned version
-Android	✅ Implemented – core 360° image rendering with interactive controls
-github.com
-	Video support in v0.2.0; video UI in v0.3.0
-Web	🔴 Not yet implemented	360° images planned for v0.4.0; videos for v0.5.0
-github.com
-
-iOS	🔴 Not yet implemented	Targeted for v0.8.0 with a Metal/SceneKit renderer
-github.com
-
-Windows & Linux	🔴 Not yet implemented	Planned post‑1.0.0
+| Platform | Status | Planned version |
+|---------|--------|----------------|
+| **Android** | ✅ **Implemented** – core 360° image rendering with interactive controls | Video support in v0.2.0; video UI in v0.3.0 |
+| **Web** | 🔴 Not yet implemented | 360° images planned for v0.4.0; videos for v0.5.0 |
+| **iOS** | 🔴 Not yet implemented | Targeted for v0.8.0 with a Metal/SceneKit |
+| **Windows & Linux** | 🔴 Not yet implemented | Planned post‑1.0.0 |
 
 Refer to the [Developer Roadmap](ROADMAP.md)
  for details on upcoming milestones.
