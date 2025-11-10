@@ -24,3 +24,72 @@ Windows & Linux	🔴 Not yet implemented	Planned post‑1.0.0
 
 Refer to the [Developer Roadmap](ROADMAP.md)
  for details on upcoming milestones.
+
+## Features (v0.1.0)
+
+This alpha release is intentionally simple but provides a solid base for future development.
+Currently supported features include:
+- **Equirectangular image rendering** – images are rendered onto an inward‑facing sphere using OpenGL ES.
+- **Gesture‑based navigation** – dragging changes yaw & pitch, pinch‑to‑zoom adjusts the field of view and double‑tap resets the view.
+These gestures are handled by a native `TouchController` which translates touch events to camera rotation and zoom. 
+- **Programmatic control** – via `ThreeSixtyController` you can set yaw/pitch, FOV, FOV limits, reset the view and load new images. 
+- **Image loading from assets, files or memory** – call `loadImage()` with an asset or file path or `loadImageBytes()` to supply raw bytes. 
+- **View state retrieval** – query the current yaw, pitch and FOV with `getViewState()`.
+- **Event callbacks** – register `onFovChanged` and `onError` listeners to respond to native changes or errors. 
+
+On top of the core widget, the **ThreeSixtyControls** overlay adds simple UI controls for zooming in/out, resetting the view and displaying the current FOV. 
+
+## Usage
+Add `three_sixty_media` as a dependency in your `pubspec.yaml` (see the included `pubspec.yaml` for minimal SDK constraints), then import and use the provided widgets and controller:
+``` dart
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:three_sixty_media/three_sixty_media.dart';
+
+class My360Viewer extends StatefulWidget {
+  @override
+  State<My360Viewer> createState() => _My360ViewerState();
+}
+
+class _My360ViewerState extends State<My360Viewer> {
+  late final ThreeSixtyController controller;
+
+  @override
+  void initState() {
+    super.initState();
+    controller = ThreeSixtyController.attachToView(0);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<Uint8List>(
+      future: rootBundle.load('assets/panorama.jpg').then((data) => data.buffer.asUint8List()),
+      builder: (context, snapshot) {
+        if (!snapshot.hasData) return const CircularProgressIndicator();
+        final imageBytes = snapshot.data!;
+        return Scaffold(
+          body: Stack(
+            children: [
+              ThreeSixtyView(
+                source: 'memory',
+                controller: controller,
+                onReady: () async {
+                  // customise FOV limits (30° – 160°) and load image
+                  await controller.setFovLimits(min: 30, max: 160);
+                  await controller.loadImageBytes(imageBytes);
+                },
+              ),
+              ThreeSixtyControls(
+                controller: controller,
+                initialFov: 75,
+                minFov: 30,
+                maxFov: 160,
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+}
+```
+
