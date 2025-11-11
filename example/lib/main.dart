@@ -45,7 +45,7 @@ class _TestAppState extends State<TestApp> {
             source: 'memory',
             controller: controller,
             onReady: () async {
-              await controller.setFovLimits(min: 30, max: 160); // Fisheye möglich
+              await controller.setFovLimits(min: 30, max: 160);
               await controller.loadImageBytes(widget.imageBytes);
             },
           ),
