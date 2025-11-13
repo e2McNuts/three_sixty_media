@@ -26,6 +26,7 @@ class TouchController(
 
     private var viewWidth = 1
     private var viewHeight = 1
+    private var gestureEnabled = true
 
     /** Set the current view dimensions. Called from ThreeSixtyMediaView. */
     fun updateViewSize(width: Int, height: Int) {
@@ -40,6 +41,16 @@ class TouchController(
         fov = fov.coerceIn(minFov, maxFov)
     }
 
+    /** Set the initial FOV. */
+    fun setFov(initialFov: Double) {
+        fov = initialFov
+    }
+
+    /** Enable or disable gesture recognition. */
+    fun setGestureEnabled(enabled: Boolean) {
+        gestureEnabled = enabled
+    }
+
     private val gestureDetector = GestureDetector(context, object : GestureDetector.SimpleOnGestureListener() {
         override fun onScroll(
             e1: MotionEvent?,
@@ -47,14 +58,14 @@ class TouchController(
             distanceX: Float,
             distanceY: Float
         ): Boolean {
-            // Vertikales FOV (in Radiant) aus dem aktuellen FOV-Wert berechnen
+            // Calculate vertical FOV (in radians) from the current FOV value
             val vFovRad = Math.toRadians(fov)
-            // Seitenverhältnis ermitteln
+            // Determine aspect ratio
             val aspect = viewWidth.toDouble() / viewHeight.toDouble()
-            // Horizontales FOV (in Radiant) anhand des Aspekts berechnen
+            // Calculate horizontal FOV (in radians) based on aspect
             val hFovRad = 2.0 * Math.atan(Math.tan(vFovRad / 2.0) * aspect)
 
-            // Pixel-Delta in Winkel-Delta umrechnen; negative Vorzeichen für „Canvas zieht mit“
+            // Convert pixel delta to angle delta; negative signs for "canvas drags with finger"
             val yawDelta = (distanceX / viewWidth) * hFovRad
             val pitchDelta = (distanceY / viewHeight) * vFovRad
 
@@ -79,8 +90,10 @@ class TouchController(
 
 
     fun onTouchEvent(event: MotionEvent): Boolean {
-        scaleDetector.onTouchEvent(event)
-        gestureDetector.onTouchEvent(event)
+        if (gestureEnabled) {
+            scaleDetector.onTouchEvent(event)
+            gestureDetector.onTouchEvent(event)
+        }
         return true
     }
 }

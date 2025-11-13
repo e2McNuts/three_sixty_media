@@ -1,26 +1,23 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show rootBundle, Uint8List;
 import 'package:three_sixty_media/three_sixty_media.dart';
+import 'package:file_picker/file_picker.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final bytes = await rootBundle.load('assets/test.jpg');
-  runApp(DemoApp(imageBytes: bytes.buffer.asUint8List()));
+  runApp(const DemoApp());
 }
 
 class DemoApp extends StatelessWidget {
-  final Uint8List imageBytes;
-  const DemoApp({super.key, required this.imageBytes});
+  const DemoApp({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(home: TestApp(imageBytes: imageBytes));
+    return const MaterialApp(home: TestApp());
   }
 }
 
 class TestApp extends StatefulWidget {
-  final Uint8List imageBytes;
-  const TestApp({super.key, required this.imageBytes});
+  const TestApp({super.key});
 
   @override
   State<TestApp> createState() => _TestAppState();
@@ -32,21 +29,45 @@ class _TestAppState extends State<TestApp> {
   @override
   void initState() {
     super.initState();
-    controller = ThreeSixtyController.attachToView(0);
+    controller = ThreeSixtyController();
+  }
+
+  Future<void> _pickAndLoadImage() async {
+    FilePickerResult? result = await FilePicker.platform.pickFiles(
+      type: FileType.image,
+      allowMultiple: false,
+    );
+
+    if (result != null && result.files.single.path != null) {
+      String filePath = result.files.single.path!;
+      await controller.setImage(FileSource(filePath));
+    } else {
+      // User canceled the picker or no file was selected
+      debugPrint("File picking cancelled or no file selected.");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('ThreeSixtyMedia')),
+      appBar: AppBar(
+        title: const Text('ThreeSixtyMedia'),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.folder_open),
+            onPressed: _pickAndLoadImage,
+            tooltip: 'Load local image',
+          ),
+        ],
+      ),
       body: Stack(
         children: [
           ThreeSixtyView(
-            source: 'memory',
             controller: controller,
             onReady: () async {
+              // Load a default asset image when the view is ready
+              await controller.setImage(AssetSource('assets/test.jpg'));
               await controller.setFovLimits(min: 30, max: 160);
-              await controller.loadImageBytes(widget.imageBytes);
             },
           ),
           ThreeSixtyControls(

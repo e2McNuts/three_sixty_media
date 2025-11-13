@@ -17,12 +17,12 @@ import kotlin.math.*
  *
  * Supports:
  *  • yaw / pitch / FOV camera control
- *  • loading textures from a file path or bytes
+ *  • loading textures from bytes
  *  • rendering an inward-facing sphere mesh
  */
 class Renderer360(private val context: Context) : GLSurfaceView.Renderer {
 
-    // Kamera-Parameter
+    // Camera parameters
     private var yaw = 0.0
     private var pitch = 0.0
     private var fov = 75.0
@@ -30,11 +30,9 @@ class Renderer360(private val context: Context) : GLSurfaceView.Renderer {
     private var maxFov = 100.0
 
     var onFovChanged: ((Double) -> Unit)? = null
-
     var onError: ((String) -> Unit)? = null
 
-
-    // OpenGL-objects
+    // OpenGL objects
     private var program = 0
     private var textureId = 0
     private lateinit var sphere: SphereMesh
@@ -54,13 +52,8 @@ class Renderer360(private val context: Context) : GLSurfaceView.Renderer {
     private var surfaceWidth = 1
     private var surfaceHeight = 1
 
-    // Image path (for reference)
-    private var imagePath: String? = null
-
-
-
     // ---------------------------------------------------------------------
-    //  OpenGL-Lifecycle
+    //  OpenGL Lifecycle
     // ---------------------------------------------------------------------
 
     override fun onSurfaceCreated(gl: GL10?, config: EGLConfig?) {
@@ -114,7 +107,7 @@ class Renderer360(private val context: Context) : GLSurfaceView.Renderer {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT or GLES20.GL_DEPTH_BUFFER_BIT)
         GLES20.glUseProgram(program)
 
-        // --- Kamera-View berechnen ---
+        // --- Calculate Camera View ---
         val yawRad = yaw.toFloat()
         val pitchRad = pitch.toFloat()
 
@@ -141,23 +134,9 @@ class Renderer360(private val context: Context) : GLSurfaceView.Renderer {
         sphere.draw(aPos, aTex)
     }
 
-
-
     // ---------------------------------------------------------------------
     //  Textures
     // ---------------------------------------------------------------------
-
-    /** Loads an image file (local or asset). */
-    fun loadImage(path: String) {
-        imagePath = path
-        val bitmap = loadBitmap(path)
-        if (bitmap == null) {
-            Log.e("Renderer360", "Failed to load bitmap from $path")
-            onError?.invoke("Failed to load image: $path")
-            return
-        }
-        uploadTexture(bitmap)
-    }
 
     /** Loads an image directly from byte data (from the Flutter layer). */
     fun loadImageBytes(data: ByteArray) {
@@ -183,23 +162,6 @@ class Renderer360(private val context: Context) : GLSurfaceView.Renderer {
         android.opengl.GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0)
         bitmap.recycle()
     }
-
-    /** Reads a bitmap from an asset or file path. */
-    private fun loadBitmap(path: String): Bitmap? {
-        return try {
-            val stream: InputStream? = when {
-                path.startsWith("assets/") -> context.assets.open(path.removePrefix("assets/"))
-                path.startsWith("/") -> java.io.FileInputStream(path)
-                else -> null
-            }
-            stream?.use { BitmapFactory.decodeStream(it) }
-        } catch (e: Exception) {
-            e.printStackTrace()
-            null
-        }
-    }
-
-
 
     // ---------------------------------------------------------------------
     //  Camera control
@@ -229,7 +191,7 @@ class Renderer360(private val context: Context) : GLSurfaceView.Renderer {
     fun resetView() {
         yaw = 0.0
         pitch = 0.0
-        fov = ((minFov + maxFov) / 2.0)
+        fov = 75.0 // Reset to a default FOV, e.g., 75 degrees
         updateProjection()
     }
 
@@ -237,8 +199,6 @@ class Renderer360(private val context: Context) : GLSurfaceView.Renderer {
         val aspect = surfaceWidth.toFloat() / surfaceHeight.toFloat()
         Matrix.perspectiveM(projection, 0, fov.toFloat(), aspect, 0.1f, 100f)
     }
-
-
 
     // ---------------------------------------------------------------------
     //  Cleanup

@@ -4,7 +4,6 @@ import android.os.Handler
 import android.os.Looper
 import android.content.Context
 import android.opengl.GLSurfaceView
-import android.view.MotionEvent
 import android.view.View
 import com.threesixtymedia.three_sixty_media.gl.Renderer360
 import com.threesixtymedia.three_sixty_media.gl.TouchController
@@ -36,7 +35,17 @@ class ThreeSixtyMediaView(
         glView.setRenderer(renderer)
         glView.renderMode = GLSurfaceView.RENDERMODE_CONTINUOUSLY
 
-        // Initialize the touch controller:
+        // Extract initial parameters from creationParams
+        val initialYaw = creationParams?.get("initialYaw") as? Double ?: 0.0
+        val initialPitch = creationParams?.get("initialPitch") as? Double ?: 0.0
+        val initialFov = creationParams?.get("initialFov") as? Double ?: 75.0
+        val gestureEnabled = creationParams?.get("gestureEnabled") as? Boolean ?: true
+
+        // Apply initial camera settings to the renderer
+        renderer.setYawPitchRadians(initialYaw, initialPitch)
+        renderer.setFovDegrees(initialFov)
+
+        // Initialize the touch controller
         touchController = TouchController(
             context,
             onRotationChanged = { yaw, pitch ->
@@ -50,17 +59,19 @@ class ThreeSixtyMediaView(
                 }
             }
         )
+        touchController.setGestureEnabled(gestureEnabled)
+        touchController.setFov(initialFov) // Set initial FOV for touch controller
 
         glView.post {
             touchController.updateViewSize(glView.width, glView.height)
         }
 
         renderer.onFovChanged = { fov ->
-        // Ensure this runs on the main/UI thread
-        mainHandler.post {
-            channel.invokeMethod("onFovChanged", mapOf("fov" to fov))
+            // Ensure this runs on the main/UI thread
+            mainHandler.post {
+                channel.invokeMethod("onFovChanged", mapOf("fov" to fov))
+            }
         }
-    }
 
         renderer.onError = { message: String ->
             mainHandler.post {
@@ -69,16 +80,13 @@ class ThreeSixtyMediaView(
         }
 
         glView.setOnTouchListener { _, event ->
-            touchController.onTouchEvent(event)
+            if (gestureEnabled) {
+                touchController.onTouchEvent(event)
+            }
             true
         }
 
         channel.setMethodCallHandler(this)
-
-        val src = creationParams?.get("source") as? String
-        if (src != null && src != "memory") {
-            glView.queueEvent { renderer.loadImage(src) }
-        }
     }
 
     override fun getView(): View = glView
@@ -114,10 +122,15 @@ class ThreeSixtyMediaView(
             "setYawPitch" -> {
                 val yaw = call.argument<Double>("yaw") ?: 0.0
                 val pitch = call.argument<Double>("pitch") ?: 0.0
-                glView.queueEvent { renderer.setYawPitchRadians(Math.toRadians(yaw), Math.toRadians(pitch)) }
+                glView.queueEvent { renderer.setYawPitchRadians(yaw, pitch) } // Yaw and Pitch are already in radians from Flutter
                 result.success(null)
             }
-            else -> result.success(null)
+            "setGestureEnabled" -> {
+                val enabled = call.argument<Boolean>("enabled") ?: true
+                mainHandler.post { touchController.setGestureEnabled(enabled) }
+                result.success(null)
+            }
+            else -> result.notImplemented() // Use notImplemented for unhandled methods
         }
     }
 }

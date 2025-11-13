@@ -4,9 +4,7 @@ import android.opengl.GLES20
 import android.util.Log
 
 /**
- * Helper class for compiling vertex and fragment shaders.
- *
- * Version 0.1.0: only a stub – actual shader code will follow in step 2.
+ * Helper class for compiling OpenGL ES shaders.
  */
 object ShaderProgram {
     fun compileShader(type: Int, source: String): Int {

@@ -8,8 +8,7 @@ import 'controller.dart';
 class ThreeSixtyView extends StatefulWidget {
   const ThreeSixtyView({
     super.key,
-    required this.source,
-    this.controller,
+    required this.controller,
     this.initialYaw = 0.0,
     this.initialPitch = 0.0,
     this.initialFov = 75.0,
@@ -18,8 +17,7 @@ class ThreeSixtyView extends StatefulWidget {
     this.onViewChanged,
   });
 
-  final String source;
-  final ThreeSixtyController? controller;
+  final ThreeSixtyController controller;
   final double initialYaw;
   final double initialPitch;
   final double initialFov;
@@ -32,9 +30,6 @@ class ThreeSixtyView extends StatefulWidget {
 }
 
 class _ThreeSixtyViewState extends State<ThreeSixtyView> {
-  // ignore: unused_field
-  ThreeSixtyController? _controller;
-
   @override
   Widget build(BuildContext context) {
     if (defaultTargetPlatform != TargetPlatform.android) {
@@ -45,7 +40,6 @@ class _ThreeSixtyViewState extends State<ThreeSixtyView> {
       viewType: 'ThreeSixtyMediaView',
       onPlatformViewCreated: _onPlatformViewCreated,
       creationParams: {
-        'source': widget.source,
         'initialYaw': widget.initialYaw,
         'initialPitch': widget.initialPitch,
         'initialFov': widget.initialFov,
@@ -56,9 +50,7 @@ class _ThreeSixtyViewState extends State<ThreeSixtyView> {
   }
 
   void _onPlatformViewCreated(int id) {
-    // Public factory instead of private constructor:
-    _controller = widget.controller ?? ThreeSixtyController.attachToView(id);
-    
+    widget.controller.attachToView(id);
     widget.onReady?.call();
   }
 }
